@@ -4,3 +4,16 @@
 
 - name: install Java via os-specific OpenJDK package
   include: "openJDK-{{ansible_os_family}}.yml"
+
+- name: get java home
+  shell:   "which java"
+  register: java_home_result
+  changed_when: false
+  become: false
+
+- name: set java environment var
+  lineinfile:
+    dest:   "/etc/profile.d/java.sh"
+    line:   "export JAVA_HOME={{ java_home_result.stdout | replace('/bin/java', '') }}"
+    state:  present
+    create: yes
