@@ -5,15 +5,17 @@
 - name: install Java via os-specific OpenJDK package
   include: "openJDK-{{ansible_os_family}}.yml"
 
-- name: get java home
-  shell:   "which java"
-  register: java_home_result
-  changed_when: false
-  become: false
-
+ # TODO: test other OSes
 - name: set java environment var
-  lineinfile:
+  blockinfile:
     dest:   "/etc/profile.d/java.sh"
-    line:   "export JAVA_HOME={{ java_home_result.stdout | replace('/bin/java', '') }}"
+    marker: "# {mark} java home"
+    block:   |
+      # make JAVA_HOME beholden to alternatives
+      export JAVA_HOME=$( j=$( readlink -f /usr/bin/java ) ; echo ${j%%/bin/java} )
     state:  present
     create: yes
+
+- name: check java home
+  shell: "bash -lc 'echo $JAVA_HOME'"
+  changed_when: false
